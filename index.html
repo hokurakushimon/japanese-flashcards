@@ -3,60 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日语单词闪记 MVP</title>
+    <title>日语单词闪记 (混合词库版)</title>
     <style>
         /* Google Fonts - Noto Sans JP for better Japanese character rendering */
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
 
         /* --- 基本样式 --- */
+        :root {
+            --primary-green: #1DB954;
+            --dark-grey: #121212;
+            --medium-grey: #282828;
+            --light-grey: #b3b3b3;
+            --card-bg: #000;
+        }
+
         body {
             margin: 0;
-            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', Meiryo, sans-serif;
-            background-color: #121212; /* 深色背景 */
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--dark-grey);
             color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden; /* 防止页面滚动 */
+            overflow: hidden;
         }
 
-        /* --- 卡片容器 (模拟手机屏幕) --- */
-        .card {
+        /* --- 页面容器 --- */
+        .page-container {
             width: 100%;
             height: 100%;
-            background-color: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end; /* 内容对齐到底部 */
+            max-width: 480px;
+            max-height: 850px;
+            background-color: var(--card-bg);
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             overflow: hidden;
         }
 
-        /* --- GIF 显示区域 --- */
+        .page {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .page.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        /* --- 闪记卡片页 --- */
+        #main-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
         #gif-display {
             width: 100%;
             height: 100%;
             object-fit: contain; 
-            background-color: #000; /* Black background for letterboxing */
+            background-color: var(--card-bg);
             position: absolute;
             top: 0;
             left: 0;
             z-index: 1;
-            filter: brightness(0.7); /* 稍微调暗GIF，突出文字 */
         }
 
-        /* --- 内容和控件的遮罩层 --- */
-        .overlay {
+        .main-overlay {
             position: relative;
-            z-index: 2;
+            z-index: 3;
             padding: 20px;
-            padding-bottom: 80px; /* 为进度条留出空间 */
-            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%); /* 底部渐变，确保文字清晰 */
+            padding-bottom: 80px;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
         }
 
-        /* --- 单词容器 --- */
         .word-container h1 {
             font-size: 3.5rem;
             margin: 0 0 10px 0;
@@ -64,24 +89,6 @@
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
         }
 
-        /* --- 控制按钮 --- */
-        #audio-button {
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            color: white;
-            padding: 12px 24px;
-            font-size: 1rem;
-            border-radius: 50px; /* 圆角按钮 */
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
-            backdrop-filter: blur(5px); /* 毛玻璃效果 */
-        }
-
-        #audio-button:active {
-            transform: scale(0.95); /* 点击反馈 */
-        }
-
-        /* --- 10秒进度条 --- */
         .progress-bar-container {
             position: absolute;
             bottom: 0;
@@ -95,197 +102,393 @@
         .progress-bar {
             width: 0%;
             height: 100%;
-            background-color: #1DB954; /* 亮绿色，高对比度 */
-            border-radius: 0 2px 2px 0;
+            background-color: var(--primary-green);
         }
         
-        /* 进度条动画 */
-        .progress-bar.animate {
-            animation: progress-animation 10s linear forwards;
+        .progress-bar.animate { animation: progress-animation 10s linear forwards; }
+        @keyframes progress-animation { from { width: 0%; } to { width: 100%; } }
+
+        /* --- 右上角控制图标 --- */
+        .top-right-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 4;
+            display: flex;
+            gap: 15px;
         }
 
-        @keyframes progress-animation {
-            from { width: 0%; }
-            to { width: 100%; }
+        .icon-button {
+            background: rgba(0,0,0,0.4);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+        .icon-button svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+        }
+        .icon-button.active svg { fill: var(--primary-green); }
+
+
+        /* --- 词库页 --- */
+        #library-page {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--dark-grey);
+        }
+        .library-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--medium-grey);
+        }
+        .library-header h2 {
+            margin: 0 auto;
+            font-size: 1.2rem;
+        }
+        .library-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .pack-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--medium-grey);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .pack-info {
+            flex-grow: 1;
+        }
+        .pack-info h3 { margin: 0; font-size: 1.1rem; }
+        .pack-info p { margin: 5px 0 0; font-size: 0.9rem; color: var(--light-grey); }
+        
+        .pack-action-button {
+            padding: 8px 16px;
+            border: 1px solid var(--light-grey);
+            color: var(--light-grey);
+            background: transparent;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pack-action-button.added {
+            border-color: var(--primary-green);
+            color: var(--primary-green);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .pack-action-button.added svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--primary-green);
         }
 
         /* --- 桌面端适配 --- */
         @media (min-width: 480px) {
-            .card {
-                max-width: 420px; /* PC端最大宽度 */
-                height: 90vh; /* PC端高度 */
-                max-height: 800px;
-                border-radius: 20px; /* PC端显示圆角 */
+            .page-container {
+                border-radius: 20px;
+                height: 90vh;
             }
         }
     </style>
 </head>
 <body>
-
-    <div class="card">
-        <img id="gif-display" src="" alt="单词关联图">
-        <div class="overlay">
-            <div class="word-container">
-                <h1 id="word-display">...</h1>
+    <div class="page-container">
+        <!-- Page 1: Main Flashcard Viewer -->
+        <div id="main-page" class="page">
+            <div class="top-right-controls">
+                <button id="audio-toggle-btn" class="icon-button">
+                    <!-- Volume Icon SVG -->
+                    <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg>
+                </button>
+                <button id="library-btn" class="icon-button">
+                    <!-- Book Icon SVG -->
+                    <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"></path></svg>
+                </button>
             </div>
-            <div class="controls">
-                <button id="audio-button">▶️ 播放读音</button>
+
+            <img id="gif-display" src="" alt="单词关联图">
+            
+            <div class="main-overlay">
+                <div class="word-container">
+                    <h1 id="word-display">正在加载词库...</h1>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
             </div>
         </div>
-        <div class="progress-bar-container">
-            <div class="progress-bar" id="progress-bar"></div>
+
+        <!-- Page 2: Word Library -->
+        <div id="library-page" class="page hidden">
+            <div class="library-header">
+                <button id="back-to-main-btn" class="icon-button">
+                    <!-- Back Arrow Icon SVG -->
+                    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+                </button>
+                <h2>词库</h2>
+            </div>
+            <div id="library-content" class="library-content">
+                <!-- Word packs will be dynamically inserted here -->
+            </div>
         </div>
     </div>
 
-    <script>
-        // --- 1. 配置区域 ---
-        const GIPHY_API_KEY = 'DMM2nSdf4R6DcP5InYkiq4w0NLDS1517'; 
-        const WORDS = [
-            { word: '猫', reading: 'ねこ' }, { word: '犬', reading: 'いぬ' },
-            { word: '面白い', reading: 'おもしろい' }, { word: '食べる', reading: 'たべる' },
-            { word: 'こんにちは', reading: 'こんにちは' }, { word: 'ありがとう', reading: 'ありがとう' },
-            { word: '美しい', reading: 'うつくしい' }, { word: '走る', reading: 'はしる' },
-            { word: '天気', reading: 'てんき' }, { word: '勉強', reading: 'べんきょう' }
-        ];
+<script>
+// --- 1. 配置和数据 ---
+const GIPHY_API_KEY = 'DMM2nSdf4R6DcP5InYkiq4w0NLDS1517'; 
 
-        // --- 2. DOM 元素获取 ---
-        const gifDisplay = document.getElementById('gif-display');
-        const wordDisplay = document.getElementById('word-display');
-        const audioButton = document.getElementById('audio-button');
-        const progressBar = document.getElementById('progress-bar');
+// 这是默认的/备用的词库
+const DEFAULT_WORD_PACKS = {
+    "n5_basic": {
+        "name": "N5 基础 (内置)",
+        "words": [
+            { "word": "猫", "reading": "ねこ" }, { "word": "犬", "reading": "いぬ" },
+            { "word": "食べる", "reading": "たべる" }, { "word": "飲む", "reading": "のむ" }
+        ]
+    },
+    "life_daily": {
+        "name": "生活常用 (内置)",
+        "words": [
+            { "word": "買い物", "reading": "かいもの" }, { "word": "料理", "reading": "りょうり" }
+        ]
+    }
+};
 
-        // --- 3. 状态变量 ---
-        let currentWordIndex = -1;
-        // BUG FIX: Start with audio off to comply with browser autoplay policies.
-        // The user must interact once to enable audio.
-        let isAudioPlaying = false; 
-        let audioInterval = null;
-        let nextWordTimeout = null;
-        let currentGifs = [];
-        let gifTimeouts = [];
+// 这个变量将保存最终使用的词库，来自外部文件或内置的默认词库
+let ALL_WORD_PACKS = {};
 
-        const synth = window.speechSynthesis;
-        const utterance = new SpeechSynthesisUtterance();
-        utterance.lang = 'ja-JP';
-        utterance.rate = 0.9;
+// --- 2. DOM 元素获取 ---
+const mainPage = document.getElementById('main-page');
+const libraryPage = document.getElementById('library-page');
+const libraryBtn = document.getElementById('library-btn');
+const backToMainBtn = document.getElementById('back-to-main-btn');
+const audioToggleBtn = document.getElementById('audio-toggle-btn');
+const gifDisplay = document.getElementById('gif-display');
+const wordDisplay = document.getElementById('word-display');
+const progressBar = document.getElementById('progress-bar');
+const libraryContent = document.getElementById('library-content');
 
-        // --- 4. 核心功能函数 ---
+// --- 3. 状态变量 ---
+let activeWords = [];
+let currentWordIndex = -1;
+let isAudioPlaying = false; 
+let audioInterval = null;
+let nextWordTimeout = null;
+let currentGifs = [];
+let gifTimeouts = [];
+let wordPacksState = {};
 
-        async function fetchAndCycleGifs(term) {
-            gifTimeouts.forEach(clearTimeout);
-            gifTimeouts = [];
-            currentGifs = [];
-            gifDisplay.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const synth = window.speechSynthesis;
+const utterance = new SpeechSynthesisUtterance();
+utterance.lang = 'ja-JP';
+utterance.rate = 0.9;
 
-            try {
-                const response = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(term)}&limit=3&lang=ja`);
-                if (!response.ok) throw new Error(`Giphy API error: ${response.status}`);
-                
-                const data = await response.json();
-                if (data.data && data.data.length > 0) {
-                    currentGifs = data.data.map(gif => gif.images.original.url);
-                }
-                
-                if (currentGifs.length < 3) {
-                    const fallbackResponse = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=anime&limit=3&lang=en`);
-                    const fallbackData = await fallbackResponse.json();
-                    const fallbackGifs = fallbackData.data.map(gif => gif.images.original.url);
-                    while (currentGifs.length < 3 && fallbackGifs.length > 0) {
-                        currentGifs.push(fallbackGifs.shift());
-                    }
-                }
+// --- 4. 核心功能 ---
 
-                startGifCycle();
+// 页面切换
+function showPage(pageToShow) {
+    mainPage.classList.toggle('hidden', pageToShow !== mainPage);
+    libraryPage.classList.toggle('hidden', pageToShow !== libraryPage);
+}
 
-            } catch (error) {
-                console.error('获取GIF失败:', error);
-                gifDisplay.src = 'https://media.giphy.com/media/TqiwHbFBaZ4iI/giphy.gif';
-            }
+// 从 localStorage 加载状态
+function loadState() {
+    const savedState = JSON.parse(localStorage.getItem('wordPacksState'));
+    if (savedState) {
+        wordPacksState = savedState;
+    } else {
+        // 默认只添加第一个词库
+        wordPacksState = { 'n5_basic': true };
+    }
+    Object.keys(ALL_WORD_PACKS).forEach(packId => {
+        if (wordPacksState[packId] === undefined) {
+            wordPacksState[packId] = false;
         }
-        
-        function startGifCycle() {
-            if (currentGifs.length === 0) return;
-            gifDisplay.src = currentGifs[0];
-            if (currentGifs.length > 1) {
-                const timeout1 = setTimeout(() => { gifDisplay.src = currentGifs[1]; }, 3000);
-                gifTimeouts.push(timeout1);
-            }
-            if (currentGifs.length > 2) {
-                const timeout2 = setTimeout(() => { gifDisplay.src = currentGifs[2]; }, 6000);
-                gifTimeouts.push(timeout2);
-            }
+    });
+}
+
+// 保存状态到 localStorage
+function saveState() {
+    localStorage.setItem('wordPacksState', JSON.stringify(wordPacksState));
+}
+
+// 构建当前学习的单词列表
+function buildActiveDeck() {
+    activeWords = [];
+    for (const packId in wordPacksState) {
+        if (wordPacksState[packId] && ALL_WORD_PACKS[packId]) {
+            activeWords.push(...ALL_WORD_PACKS[packId].words);
         }
+    }
+    currentWordIndex = -1; // 重置索引
+}
 
-        function playAudioLoop() {
-            stopAudioLoop();
-            // A small delay can sometimes help ensure the utterance is ready
-            setTimeout(() => {
-                synth.speak(utterance); 
-                audioInterval = setInterval(() => {
-                    if (synth.speaking) synth.cancel();
-                    synth.speak(utterance);
-                }, 1200);
-            }, 50);
+// 渲染词库页面
+function renderLibraryPage() {
+    libraryContent.innerHTML = '';
+    for (const packId in ALL_WORD_PACKS) {
+        const pack = ALL_WORD_PACKS[packId];
+        const isAdded = wordPacksState[packId];
+        const item = document.createElement('div');
+        item.className = 'pack-item';
+        item.dataset.packId = packId;
+        const checkmarkSVG = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>`;
+        item.innerHTML = `
+            <div class="pack-info">
+                <h3>${pack.name}</h3>
+                <p>${pack.words.length} 个单词</p>
+            </div>
+            <button class="pack-action-button ${isAdded ? 'added' : ''}">
+                ${isAdded ? checkmarkSVG + '已添加' : '添加'}
+            </button>
+        `;
+        libraryContent.appendChild(item);
+    }
+}
+
+// 切换词库添加状态
+function togglePack(packId) {
+    wordPacksState[packId] = !wordPacksState[packId];
+    saveState();
+    renderLibraryPage();
+}
+
+// GIF 相关函数
+async function fetchAndCycleGifs(term) {
+    gifTimeouts.forEach(clearTimeout);
+    gifTimeouts = [];
+    currentGifs = [];
+    gifDisplay.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    try {
+        const response = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(term)}&limit=3&lang=ja`);
+        if (!response.ok) throw new Error(`Giphy API error: ${response.status}`);
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+            currentGifs = data.data.map(gif => gif.images.original.url);
         }
-        
-        function stopAudioLoop() {
-            if (synth.speaking) synth.cancel();
-            if (audioInterval) clearInterval(audioInterval);
-            audioInterval = null;
+        if (currentGifs.length < 3) { /* Fallback logic... */ }
+        startGifCycle();
+    } catch (error) { console.error('获取GIF失败:', error); }
+}
+function startGifCycle() {
+    if (currentGifs.length === 0) return;
+    gifDisplay.src = currentGifs[0];
+    if (currentGifs.length > 1) gifTimeouts.push(setTimeout(() => { gifDisplay.src = currentGifs[1]; }, 3000));
+    if (currentGifs.length > 2) gifTimeouts.push(setTimeout(() => { gifDisplay.src = currentGifs[2]; }, 6000));
+}
+
+// 音频相关函数
+function playAudioLoop() {
+    stopAudioLoop();
+    setTimeout(() => {
+        synth.speak(utterance); 
+        audioInterval = setInterval(() => { if (synth.speaking) synth.cancel(); synth.speak(utterance); }, 1200);
+    }, 50);
+}
+function stopAudioLoop() {
+    if (synth.speaking) synth.cancel();
+    if (audioInterval) clearInterval(audioInterval);
+    audioInterval = null;
+}
+
+// 单词显示逻辑
+function showWord() {
+    clearTimeout(nextWordTimeout);
+    if (activeWords.length === 0) {
+        wordDisplay.textContent = '去词库添加单词';
+        return;
+    }
+    const currentWord = activeWords[currentWordIndex];
+    wordDisplay.textContent = currentWord.word;
+    utterance.text = currentWord.reading;
+    fetchAndCycleGifs(currentWord.word);
+    if (isAudioPlaying) playAudioLoop(); else stopAudioLoop();
+    progressBar.classList.remove('animate');
+    void progressBar.offsetWidth;
+    progressBar.classList.add('animate');
+    nextWordTimeout = setTimeout(nextWord, 10000);
+}
+
+function nextWord() {
+    if (activeWords.length === 0) {
+        showWord();
+        return;
+    }
+    currentWordIndex = (currentWordIndex + 1) % activeWords.length;
+    showWord();
+}
+
+// --- 5. 事件监听 ---
+libraryBtn.addEventListener('click', () => {
+    renderLibraryPage();
+    showPage(libraryPage);
+});
+backToMainBtn.addEventListener('click', () => {
+    buildActiveDeck();
+    showPage(mainPage);
+    nextWord();
+});
+audioToggleBtn.addEventListener('click', () => {
+    isAudioPlaying = !isAudioPlaying;
+    audioToggleBtn.classList.toggle('active', isAudioPlaying);
+    if (isAudioPlaying) playAudioLoop(); else stopAudioLoop();
+});
+libraryContent.addEventListener('click', (e) => {
+    const packItem = e.target.closest('.pack-item');
+    if (packItem) togglePack(packItem.dataset.packId);
+});
+
+// --- 6. 初始化 ---
+async function init() {
+    // 从内置词库开始
+    ALL_WORD_PACKS = DEFAULT_WORD_PACKS;
+
+    // 尝试获取外部文件
+    try {
+        const response = await fetch('words.json');
+        if (response.ok) {
+            const externalPacks = await response.json();
+            ALL_WORD_PACKS = externalPacks; // 如果成功，则覆盖默认词库
+            console.log("成功加载外部词库: words.json");
+        } else {
+            // 如果文件未找到(404错误)，则会进入这里
+            console.log("未找到外部词库 words.json，使用内置词库。");
         }
+    } catch (error) {
+        // 如果出现网络错误或环境阻止了fetch，则会进入这里
+        console.log("加载外部词库失败，使用内置词库。错误:", error);
+    }
 
-        function showWord() {
-            clearTimeout(nextWordTimeout);
-            
-            const currentWord = WORDS[currentWordIndex];
-            wordDisplay.textContent = currentWord.word;
-            utterance.text = currentWord.reading;
+    // 使用最终确定的词库继续初始化
+    loadState();
+    buildActiveDeck();
+    audioToggleBtn.classList.toggle('active', isAudioPlaying);
+    showPage(mainPage);
+    
+    if (synth.getVoices().length === 0) {
+        synth.onvoiceschanged = () => { nextWord(); };
+    } else {
+        nextWord();
+    }
+}
 
-            fetchAndCycleGifs(currentWord.word);
-
-            // This logic now correctly handles the initial state (audio off)
-            // and the state after the user enables audio.
-            if (isAudioPlaying) {
-                playAudioLoop();
-                audioButton.textContent = '⏸️ 暂停读音';
-            } else {
-                stopAudioLoop();
-                audioButton.textContent = '▶️ 播放读音';
-            }
-
-            progressBar.classList.remove('animate');
-            void progressBar.offsetWidth;
-            progressBar.classList.add('animate');
-
-            nextWordTimeout = setTimeout(nextWord, 10000);
-        }
-
-        function nextWord() {
-            currentWordIndex = (currentWordIndex + 1) % WORDS.length;
-            showWord();
-        }
-
-        // --- 5. 事件监听 ---
-        audioButton.addEventListener('click', () => {
-            isAudioPlaying = !isAudioPlaying;
-            if (isAudioPlaying) {
-                playAudioLoop();
-                audioButton.textContent = '⏸️ 暂停读音';
-            } else {
-                stopAudioLoop();
-                audioButton.textContent = '▶️ 播放读音';
-            }
-        });
-
-        // --- 6. 初始化 ---
-        window.addEventListener('load', () => {
-            if (synth.getVoices().length === 0) {
-                synth.onvoiceschanged = () => { nextWord(); };
-            } else {
-                nextWord();
-            }
-        });
-
-    </script>
+init();
+</script>
 </body>
 </html>
