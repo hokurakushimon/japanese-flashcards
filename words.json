@@ -1,0 +1,100 @@
+{
+  "early_learner": {
+    "name": "幼儿初学",
+    "words": [
+      { "word": "りんご", "reading": "りんご" },
+      { "word": "みかん", "reading": "みかん" },
+      { "word": "ありがとう", "reading": "ありがとう" },
+      { "word": "おはよう", "reading": "おはよう" },
+      { "word": "さようなら", "reading": "さようなら" },
+      { "word": "こんにちは", "reading": "こんにちは" },
+      { "word": "こんばんは", "reading": "こんばんは" },
+      { "word": "お父さん", "reading": "おとうさん" },
+      { "word": "お母さん", "reading": "おかあさん" }
+    ]
+  },
+  "jlpt_n5": {
+    "name": "JLPT N5 核心",
+    "words": [
+      { "word": "私", "reading": "わたし" },
+      { "word": "学生", "reading": "がくせい" },
+      { "word": "先生", "reading": "せんせい" },
+      { "word": "学校", "reading": "がっこう" },
+      { "word": "日本語", "reading": "にほんご" },
+      { "word": "行く", "reading": "いく" },
+      { "word": "見る", "reading": "みる" },
+      { "word": "高い", "reading": "たかい" },
+      { "word": "元気", "reading": "げんき" }
+    ]
+  },
+  "jlpt_n4": {
+    "name": "JLPT N4 进阶",
+    "words": [
+      { "word": "意見", "reading": "いけん" },
+      { "word": "準備", "reading": "じゅんび" },
+      { "word": "旅行", "reading": "りょこう" },
+      { "word": "同じ", "reading": "おなじ" },
+      { "word": "趣味", "reading": "しゅみ" },
+      { "word": "教える", "reading": "おしえる" },
+      { "word": "着る", "reading": "きる" },
+      { "word": "便利", "reading": "べんり" },
+      { "word": "頑張る", "reading": "がんばる" }
+    ]
+  },
+  "jlpt_n3": {
+    "name": "JLPT N3 中级",
+    "words": [
+      { "word": "記憶", "reading": "きおく" },
+      { "word": "情報", "reading": "じょうほう" },
+      { "word": "生産", "reading": "せいさん" },
+      { "word": "技術", "reading": "ぎじゅつ" },
+      { "word": "国際", "reading": "こくさい" },
+      { "word": "直接", "reading": "ちょくせつ" },
+      { "word": "影響", "reading": "えいきょう" },
+      { "word": "理解", "reading": "りかい" },
+      { "word": "発見", "reading": "はっけん" }
+    ]
+  },
+  "jlpt_n2": {
+    "name": "JLPT N2 高级",
+    "words": [
+      { "word": "吸収", "reading": "きゅうしゅう" },
+      { "word": "貢献", "reading": "こうけん" },
+      { "word": "強調", "reading": "きょうちょう" },
+      { "word": "評価", "reading": "ひょうか" },
+      { "word": "資源", "reading": "しげん" },
+      { "word": "意識", "reading": "いしき" },
+      { "word": "改善", "reading": "かいぜん" },
+      { "word": "発展", "reading": "はってん" },
+      { "word": "活躍", "reading": "かつやく" }
+    ]
+  },
+  "jlpt_n1": {
+    "name": "JLPT N1 顶尖",
+    "words": [
+      { "word": "巧妙", "reading": "こうみょう" },
+      { "word": "脆弱", "reading": "ぜいじゃく" },
+      { "word": "躊躇", "reading": "ちゅうちょ" },
+      { "word": "迅速", "reading": "じんそく" },
+      { "word": "網羅", "reading": "もうら" },
+      { "word": "膨大", "reading": "ぼうだい" },
+      { "word": "円滑", "reading": "えんかつ" },
+      { "word": "漠然", "reading": "ばくぜん" },
+      { "word": "吟味", "reading": "ぎんみ" }
+    ]
+  },
+  "business_basic": {
+    "name": "商务日语",
+    "words": [
+      { "word": "会議", "reading": "かいぎ" },
+      { "word": "資料", "reading": "しりょう" },
+      { "word": "報告", "reading": "ほうこく" },
+      { "word": "連絡", "reading": "れんらく" },
+      { "word": "相談", "reading": "そうだん" },
+      { "word": "承知しました", "reading": "しょうちしました" },
+      { "word": "お疲れ様です", "reading": "おつかれさまです" },
+      { "word": "見積書", "reading": "みつもりしょ" },
+      { "word": "契約書", "reading": "けいやくしょ" }
+    ]
+  }
+}
